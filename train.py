@@ -8,6 +8,7 @@ from keras.layers.core import Dropout
 from keras.layers.core import Dense
 from keras.optimizers import Adam
 from keras.preprocessing.image import ImageDataGenerator
+from keras.utils import Sequence
 from sklearn.model_selection import train_test_split
 import numpy as np
 from matplotlib import pyplot as plt
@@ -17,51 +18,43 @@ import os
 
 input_shape = (image_utils.img_width, image_utils.img_height, image_utils.img_depth)
 
-
 """
 
 	Modelo de la red
 
 """
 
-model = keras.models.Sequential()
+model = keras.models.Sequential([
 
-# Bloque de CONV => RELU => POOL
-model.add(Conv2D(8, (3, 3), padding = "same", input_shape = input_shape))
-model.add(Activation("relu"))
-model.add(BatchNormalization())
-model.add(MaxPooling2D(pool_size = (2, 2)))
-model.add(Dropout(0.25))
+		Conv2D(8, (3, 3), padding = "same", input_shape = input_shape),
+		Activation("relu"),
+		BatchNormalization(),
+		MaxPooling2D(pool_size = (2, 2)),
+		Dropout(0.25),
 
-# Bloque CONV => RELU
-model.add(Conv2D(16, (3, 3), padding = "same"))
-model.add(Activation("relu"))
-model.add(BatchNormalization())
+		Conv2D(16, (3, 3), padding = "same"),
+		Activation("relu"),
+		BatchNormalization(),
 
-# Bloque CONV => RELU => POOL
-model.add(Conv2D(16, (3, 3), padding = "same"))
-model.add(Activation("relu"))
-model.add(BatchNormalization())
+		Conv2D(16, (3, 3), padding = "same"),
+		Activation("relu"),
+		BatchNormalization(),
+		MaxPooling2D(pool_size = (2, 2)),
+		Dropout(0.25),
 
-# POOL
+		Flatten(),
+		Dense(128),
+		Activation("relu"),
+		BatchNormalization(),
+		Dropout(0.5),
+		Dense(64),
+		Activation("relu"),
+		BatchNormalization(),
+		Dropout(0.5),
+		Dense(1),
+		Activation("sigmoid")
 
-model.add(MaxPooling2D(pool_size = (2, 2)))
-model.add(Dropout(0.25))
-
-# Pasa a capas FC
-
-model.add(Flatten())
-model.add(Dense(128))
-model.add(Activation("relu"))
-model.add(BatchNormalization())
-model.add(Dropout(0.5))
-model.add(Dense(64))
-model.add(Activation("relu"))
-model.add(BatchNormalization())
-model.add(Dropout(0.5))
-model.add(Dense(2))
-model.add(Activation("softmax"))
-
+	])
 
 """
 
@@ -69,28 +62,43 @@ model.add(Activation("softmax"))
 
 """
 
-epochs = 100
+
+epochs = 10
 learning_rate = 1e-3
 batch_size = 32
 
-data = []
-car_paths = os.listdir("true_segments")
-non_car_paths = os.listdir("false_segments")
+class DataGenerator(Sequence):
+	def __init__(self, path_names):
+		self.path_names = path_names
+		self.indexes = np.arange(len(self.path_names))
+		np.random.shuffle(self.indexes)
 
-for path in car_paths:
-	data.append(np.load(os.path.join("true_segments", path)))
+	def __len__(self):
+		return int(np.floor(len(self.path_names) / batch_size))
 
-for path in non_car_paths:
-	data.append(np.load(os.path.join("false_segments", path)))
+	def on_epoch_end(self):
+		self.indexes = np.arange(len(self.path_names))
+		np.random.shuffle(self.indexes)
 
-labels = [[1]] * len(car_paths) + [[0]] * len(non_car_paths)
+	def __getitem__(self, index):
+		batch_indexes = self.indexes[index * batch_size: (index + 1) * batch_size]
+		X = np.empty((batch_size, image_utils.img_height, image_utils.img_width, image_utils.img_depth), dtype="float32")
+		y = np.empty((batch_size), dtype="uint8")
+
+		for i, batch_i in enumerate(batch_indexes):
+			X[i,] = np.load(os.path.join("data", self.path_names[batch_i]))
+			y[i] = 1 if self.path_names[0] == 'c' else 0
+
+		return X, y
 
 
-data = np.array(data, dtype="float") / 255.0
-labels = np.array(labels)
-train_x, train_y, test_x, test_y = train_test_split(data, labels, test_size=0.2)
 
-augmentator = ImageDataGenerator(rotation_range=25, zoom_range=0.2, horizontal_flip=True, fill_mode="nearest")
+paths = os.listdir("data")
+np.random.shuffle(paths)
+
+split_point = int(0.8 * len(paths))
+training_generator = DataGenerator(paths[:split_point])
+testing_generator = DataGenerator(paths[split_point:])
 
 optimizer = Adam(lr=learning_rate, decay=learning_rate/epochs)
 
@@ -100,9 +108,9 @@ model.compile(loss="binary_crossentropy", optimizer=optimizer, metrics=["accurac
 # Train
 
 H = model.fit_generator(
-	augmentator.flow(train_x, train_y, batch_size=batch_size),
-	validation_data=(test_x, test_y),
-	steps_per_epoch=len(train_x) / batch_size,
+	generator=training_generator,
+	validation_data=testing_generator,
+	steps_per_epoch=split_point / batch_size,
 	epochs=epochs, verbose=1)
 
 model.save("model")

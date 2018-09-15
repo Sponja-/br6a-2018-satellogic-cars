@@ -168,7 +168,7 @@ if __name__ == "__main__":
 		print(f"Saving {len(true_train_images)} car images")
 		for img in true_train_images:
 			# Can't save it as an image: it has an extra channel
-			with open(os.path.join("true_segments", str(true_index)), 'wb') as save_file:
+			with open(os.path.join("data", "car_" + str(true_index)), 'wb') as save_file:
 				np.save(save_file, img)
 			true_index += 1
 
@@ -177,7 +177,7 @@ if __name__ == "__main__":
 
 		print(f"Saving {len(false_train_images)} non-car images")
 		for img in false_train_images:
-			with open(os.path.join("false_segments", str(false_index)), 'wb') as save_file:
+			with open(os.path.join("data", str(false_index)), 'wb') as save_file:
 				np.save(save_file, img)
 			false_index += 1
 		
