@@ -63,7 +63,7 @@ model = keras.models.Sequential([
 """
 
 
-epochs = 10
+epochs = 50
 learning_rate = 1e-3
 batch_size = 32
 
@@ -94,23 +94,30 @@ class DataGenerator(Sequence):
 
 
 paths = os.listdir("data")
-np.random.shuffle(paths)
 
-split_point = int(0.8 * len(paths))
-training_generator = DataGenerator(paths[:split_point])
-testing_generator = DataGenerator(paths[split_point:])
+first_car = paths.index('c0')
+non_car_paths = paths[:first_car]
+car_paths = paths[first_car:]
+
+np.random.shuffle(car_paths)
+np.random.shuffle(non_car_paths)
+split_point_non_car = int(len(non_car_paths) * 0.8)
+split_point_car = int(len(car_paths) * 0.8)
+
+training_generator = DataGenerator(non_car_paths[:split_point_non_car] + car_paths[:split_point_car])
+testing_generator = DataGenerator(non_car_paths[split_point_non_car:] + car_paths[split_point_car:])
 
 optimizer = Adam(lr=learning_rate, decay=learning_rate/epochs)
 
 # Init model
-model.compile(loss="binary_crossentropy", optimizer=optimizer, metrics=["accuracy"])
+model.compile(loss="binary_crossentropy", optimizer=optimizer, metrics=["binary_accuracy"])
 
 # Train
 
 H = model.fit_generator(
 	generator=training_generator,
 	validation_data=testing_generator,
-	steps_per_epoch=split_point / batch_size,
+	steps_per_epoch=(split_point_non_car + split_point_car) / batch_size,
 	epochs=epochs, verbose=1)
 
 model.save("model")
