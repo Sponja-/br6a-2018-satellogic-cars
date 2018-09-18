@@ -7,7 +7,6 @@ from keras.layers.core import Flatten
 from keras.layers.core import Dropout
 from keras.layers.core import Dense
 from keras.optimizers import Adam
-from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import Sequence
 from sklearn.model_selection import train_test_split
 import numpy as np
