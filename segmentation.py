@@ -153,8 +153,10 @@ if __name__ == "__main__":
 	image_paths = os.listdir("inputs")
 	print(f"Found {len(images)} inputs")
 
-	true_index = len(os.listdir("true_segments"))
-	false_index = len(os.listdir("false_segments"))
+	segments = os.listdir("data")
+	first_car_index = segments.index('c0')
+	true_index = first_car_index
+	false_index = len(segments) - true_index
 
 	print("Segmenting")
 	segments = [segment(image) for image in images]

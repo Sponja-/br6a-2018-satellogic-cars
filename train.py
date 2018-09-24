@@ -7,9 +7,8 @@ from keras.layers.core import Flatten
 from keras.layers.core import Dropout
 from keras.layers.core import Dense
 from keras.optimizers import Adam
-from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import Sequence
-from sklearn.model_selection import train_test_split
+from sklearn.metrics import confusion_matrix
 import numpy as np
 from matplotlib import pyplot as plt
 import image_utils
@@ -51,8 +50,8 @@ model = keras.models.Sequential([
 		Activation("relu"),
 		BatchNormalization(),
 		Dropout(0.5),
-		Dense(1),
-		Activation("sigmoid")
+		Dense(2),
+		Activation("softmax")
 
 	])
 
@@ -63,7 +62,7 @@ model = keras.models.Sequential([
 """
 
 
-epochs = 50
+epochs = 5
 learning_rate = 1e-3
 batch_size = 32
 
@@ -83,21 +82,21 @@ class DataGenerator(Sequence):
 	def __getitem__(self, index):
 		batch_indexes = self.indexes[index * batch_size: (index + 1) * batch_size]
 		X = np.empty((batch_size, image_utils.img_height, image_utils.img_width, image_utils.img_depth), dtype="float32")
-		y = np.empty((batch_size), dtype="uint8")
+		y = []
 
 		for i, batch_i in enumerate(batch_indexes):
 			X[i,] = np.load(os.path.join("data", self.path_names[batch_i]))
-			y[i] = 1 if self.path_names[0] == 'c' else 0
+			y.append(np.array([1, 0]) if self.path_names[batch_i][0] == 'c' else np.array([0, 1]))
 
-		return X, y
+		return X, np.array(y)
 
 
 
 paths = os.listdir("data")
 
 first_car = paths.index('c0')
-non_car_paths = paths[:first_car]
 car_paths = paths[first_car:]
+non_car_paths = paths[:first_car]
 
 np.random.shuffle(car_paths)
 np.random.shuffle(non_car_paths)
@@ -114,10 +113,14 @@ model.compile(loss="binary_crossentropy", optimizer=optimizer, metrics=["binary_
 
 # Train
 
-H = model.fit_generator(
-	generator=training_generator,
-	validation_data=testing_generator,
-	steps_per_epoch=(split_point_non_car + split_point_car) / batch_size,
-	epochs=epochs, verbose=1)
+def train():
+	H = model.fit_generator(
+		generator=training_generator,
+		validation_data=testing_generator,
+		steps_per_epoch=(split_point_non_car + split_point_car) / batch_size,
+		epochs=epochs, verbose=1)
 
-model.save("model")
+	model.save("model")
+
+if __name__ == "__main__":
+	train()
