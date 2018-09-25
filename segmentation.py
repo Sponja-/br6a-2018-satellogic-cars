@@ -73,19 +73,7 @@ def mask_from_segments(segments, value):
 	mask[segments == value] = 255
 	return mask
 
-def mask_not_segments(segments, value):
-	mask = np.full(segments.shape, 255, dtype="uint8")
-	mask[segments == value] = 0
-	return mask
-
-def strip(image):
-	gray = image
-	if len(image.shape) != 2:
-		gray = grayscale(image)
-	x, y, width, height = cv2.boundingRect(cv2.findNonZero(gray))
-	return image[y:y + height, x:x + width]
-
-def train_image(image, segments, value):
+def padded_image(image, segments, value):
 
 	mask = mask_from_segments(segments, value)
 
@@ -139,10 +127,9 @@ def train_image(image, segments, value):
 def images_from_selection(image, segments, selection):
 	result = []
 	print(f"{len(selection)} segments")
-	for i, val in enumerate(selection):
-		print(i + 1)
-		train = train_image(image, segments, val)
-		# train_image returns None when it can't produce an image_utils.img_width x image_utils.img_height image
+	for val in selection:
+		train = padded_image(image, segments, val)
+		# padded_image returns None when it can't produce an image_utils.img_width x image_utils.img_height image
 		if train is not None:
 			result.append(train) 
 	return result
@@ -153,10 +140,10 @@ if __name__ == "__main__":
 	image_paths = os.listdir("inputs")
 	print(f"Found {len(images)} inputs")
 
-	segments = os.listdir("data")
-	first_car_index = segments.index('c0')
-	true_index = first_car_index
-	false_index = len(segments) - true_index
+	existing_segments = os.listdir("data")
+	first_car_index = existing_segments.index('c0')
+	false_index = first_car_index
+	true_index = len(existing_segments) - false_index
 
 	print("Segmenting")
 	segments = [segment(image) for image in images]
@@ -165,20 +152,20 @@ if __name__ == "__main__":
 
 		selection = select(images[i], segments[i])
 
-		true_train_images = images_from_selection(images[i], segments[i], selection)
+		true_padded_images = images_from_selection(images[i], segments[i], selection)
 		
-		print(f"Saving {len(true_train_images)} car images")
-		for img in true_train_images:
+		print(f"Saving {len(true_padded_images)} car images")
+		for img in true_padded_images:
 			# Can't save it as an image: it has an extra channel
-			with open(os.path.join("data", "car_" + str(true_index)), 'wb') as save_file:
+			with open(os.path.join("data", "c" + str(true_index)), 'wb') as save_file:
 				np.save(save_file, img)
 			true_index += 1
 
 		not_selection = set(range(segments[i].max())) - selection
-		false_train_images = images_from_selection(images[i], segments[i], not_selection)
+		false_padded_images = images_from_selection(images[i], segments[i], not_selection)
 
-		print(f"Saving {len(false_train_images)} non-car images")
-		for img in false_train_images:
+		print(f"Saving {len(false_padded_images)} non-car images")
+		for img in false_padded_images:
 			with open(os.path.join("data", str(false_index)), 'wb') as save_file:
 				np.save(save_file, img)
 			false_index += 1

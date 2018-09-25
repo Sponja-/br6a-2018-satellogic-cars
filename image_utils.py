@@ -14,13 +14,8 @@ def load(path):
 	except NotADirectoryError:
 		return io.imread(path)
 
-def save(images, path, names):
-	try:
-		for image, name in zip(images, names):
-			io.imsave(os.path.join(path, f"{name}.jpg"), image)
-	except TypeError:
-		io.imsave(path, image)
-
+def save(image, path):
+	io.imsave(path, image)
 
 def view(image):
 	io.imshow(image)
