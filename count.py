@@ -2,10 +2,15 @@ import numpy as np
 from image_utils import *
 from segmentation import *
 from keras.models import load_model
+import sys
 
 if __name__ == "__main__":
 
-	image = load("input.jpg")
+	if len(sys.argv) != 2:
+		image = load("input.jpg")
+	else:
+		image = load(sys.argv[1])
+
 	segments = segment(image)
 
 	padded_segments = []
