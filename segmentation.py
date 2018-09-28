@@ -6,7 +6,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import cv2
-from image_utils import *
+
+img_width = 50
+img_height = 50
+img_depth = 4
 
 _selected_segments = set()
 _current_segments = []
@@ -15,9 +18,8 @@ _original_image = []
 _plt_img = []
 _shift = False
 
-
 def segment(image, **kwargs):
-	return slic(img_as_float(image), n_segments = kwargs.get("n_segments", max(image.shape) * 1.5), sigma = 5)
+	return slic(img_as_float(image), n_segments = int(kwargs.get("n_segments", max(image.shape) * 1.5)), sigma = 5)
 
 def on_click(event):
 	if _shift:
@@ -136,8 +138,8 @@ def images_from_selection(image, segments, selection):
 
 if __name__ == "__main__":
 
-	images = load("inputs")
 	image_paths = os.listdir("inputs")
+	images = [io.imread(os.path.join("inputs", image_path)) for image_path in image_paths]
 	print(f"Found {len(images)} inputs")
 
 	existing_segments = os.listdir("data")

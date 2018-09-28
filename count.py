@@ -1,16 +1,18 @@
 import numpy as np
-from image_utils import *
-from segmentation import *
+from skimage import io
+from segmentation import segment, padded_image
 from keras.models import load_model
-import sys
+from argparse import ArgumentParser
+import os
 
 if __name__ == "__main__":
 
-	if len(sys.argv) != 2:
-		image = load("input.jpg")
-	else:
-		image = load(sys.argv[1])
+	parser = ArgumentParser()
+	parser.add_argument("image_path", default="input.jpg")
+	parser.add_argument("--model", type=int, default=0)
+	args = parser.parse_args()
 
+	image = io.imread(args.image_path)
 	segments = segment(image)
 
 	padded_segments = []
@@ -22,14 +24,14 @@ if __name__ == "__main__":
 			segment_val.append(i)
 	padded_segments = np.array(padded_segments)
 
-	model = load_model("model")
+	model = load_model(os.path.join("models", f"model_{args.model}"))
 	predictions = model.predict(padded_segments)
 
 	count = 0
 	for i, pred in zip(segment_val, predictions):
-		if pred[0] > pred[1]:
+		if pred[0] > 0.1:
 			image[segments == i] = [255, 0, 0]
 			count += 1
 
 	print(f"Found {count} cars")
-	save(image, "output.jpg")
+	io.imsave("output.jpg", image)

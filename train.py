@@ -11,11 +11,11 @@ from keras.utils import Sequence
 from sklearn.metrics import confusion_matrix
 import numpy as np
 from matplotlib import pyplot as plt
-import image_utils
+from segmentation import img_width, img_height, img_depth
 import random
 import os
 
-input_shape = (image_utils.img_width, image_utils.img_height, image_utils.img_depth)
+input_shape = (img_width, img_height, img_depth)
 
 """
 
@@ -81,7 +81,7 @@ class DataGenerator(Sequence):
 
 	def __getitem__(self, index):
 		batch_indexes = self.indexes[index * batch_size: (index + 1) * batch_size]
-		X = np.empty((batch_size, image_utils.img_height, image_utils.img_width, image_utils.img_depth), dtype="float32")
+		X = np.empty((batch_size, *input_shape), dtype="float32")
 		y = []
 
 		for i, batch_i in enumerate(batch_indexes):
@@ -120,7 +120,7 @@ def train():
 		steps_per_epoch=(split_point_non_car + split_point_car) / batch_size,
 		epochs=epochs, verbose=1)
 
-	model.save("model")
+	model.save("new_model")
 
 if __name__ == "__main__":
 	train()
