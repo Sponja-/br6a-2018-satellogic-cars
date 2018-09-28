@@ -111,21 +111,6 @@ def padded_image(image, segments, value):
 	# returns a 4-channel image with dimensions (image_utils.img_width x image_utils.img_height)
 	return result_image
 
-
-"""
-	# Was slower
-
-	result_image = np.zeros((global_height, global_width, 4))
-	# Add a channel to represent whether each pixel belongs to the original segment
-	for i in range(global_height):
-		for j in range(global_width):
-			result_image[i, j] = np.array(list(image[i, j]) + [mask[i, j]])
-
-
-	
-	return result_image[(y - top_padding_y):(y + height + bottom_padding_y),(x - left_padding_x):(x + width + right_padding_x)].astype("float32")
-
-"""
 def images_from_selection(image, segments, selection):
 	result = []
 	print(f"{len(selection)} segments")
