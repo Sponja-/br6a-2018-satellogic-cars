@@ -62,7 +62,12 @@ model = keras.models.Sequential([
 """
 
 
-epochs = 5
+parser = ArgumentParser()
+parser.add_argument("dataset_path" default=os.path.join("datasets", "1"))
+parser.add_argument("--epochs", type=int)
+args = parser.parse_args()
+
+epochs = args.epochs
 learning_rate = 1e-3
 batch_size = 32
 
@@ -85,14 +90,14 @@ class DataGenerator(Sequence):
 		y = []
 
 		for i, batch_i in enumerate(batch_indexes):
-			X[i,] = np.load(os.path.join("data", self.path_names[batch_i]))
+			X[i,] = np.load(os.path.join(dataset_path, self.path_names[batch_i]))
 			y.append(np.array([1, 0]) if self.path_names[batch_i][0] == 'c' else np.array([0, 1]))
 
 		return X, np.array(y)
 
 
 
-paths = os.listdir("data")
+paths = os.listdir(args.dataset_path)
 
 first_car = paths.index('c0')
 car_paths = paths[first_car:]
@@ -120,7 +125,8 @@ def train():
 		steps_per_epoch=(split_point_non_car + split_point_car) / batch_size,
 		epochs=epochs, verbose=1)
 
-	model.save("new_model")
+	model_index = len(os.listdir("models"))
+	model.save(f"new_model_{model_index}")
 
 if __name__ == "__main__":
 	train()

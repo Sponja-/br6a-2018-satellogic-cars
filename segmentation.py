@@ -6,6 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import cv2
+from argparse import ArgumentParser
 
 img_width = 50
 img_height = 50
@@ -113,24 +114,33 @@ def padded_image(image, segments, value):
 
 def images_from_selection(image, segments, selection):
 	result = []
-	print(f"{len(selection)} segments")
-	for val in selection:
+	for i, val in enumerate(selection):
 		train = padded_image(image, segments, val)
 		# padded_image returns None when it can't produce an image_utils.img_width x image_utils.img_height image
 		if train is not None:
-			result.append(train) 
+			result.append(train)
+		print(f"Padding images [{int((i / len(selection)) * 100)}%]\r", end="")
 	return result
 
 if __name__ == "__main__":
+
+	parser = ArgumentParser()
+	parser.add_argument("--name", default="new")
+	args = parser.parse_args()
 
 	image_paths = os.listdir("inputs")
 	images = [io.imread(os.path.join("inputs", image_path)) for image_path in image_paths]
 	print(f"Found {len(images)} inputs")
 
-	existing_segments = os.listdir("data")
-	first_car_index = existing_segments.index('c0')
-	false_index = first_car_index
-	true_index = len(existing_segments) - false_index
+	output_path = os.path.join("datasets", args.name)
+	existing_segments = os.listdir(output_path)
+
+	if 'c0' in existing_segments:
+		false_index = existing_segments.index('c0')
+		true_index = len(existing_segments) - false_index
+	else:
+		false_index = len(existing_segments)
+		true_index = 0
 
 	print("Segmenting")
 	segments = [segment(image) for image in images]
@@ -144,7 +154,7 @@ if __name__ == "__main__":
 		print(f"Saving {len(true_padded_images)} car images")
 		for img in true_padded_images:
 			# Can't save it as an image: it has an extra channel
-			with open(os.path.join("data", "c" + str(true_index)), 'wb') as save_file:
+			with open(os.path.join(output_path, f"c{str(true_index)}"), 'wb') as save_file:
 				np.save(save_file, img)
 			true_index += 1
 
@@ -153,8 +163,8 @@ if __name__ == "__main__":
 
 		print(f"Saving {len(false_padded_images)} non-car images")
 		for img in false_padded_images:
-			with open(os.path.join("data", str(false_index)), 'wb') as save_file:
+			with open(os.path.join(output_path, str(false_index)), 'wb') as save_file:
 				np.save(save_file, img)
 			false_index += 1
 		
-		os.rename(os.path.join("inputs", image_paths[i]), os.path.join("processed_inputs", image_paths[i]))
+		os.rename(os.path.join("inputs", image_paths[i]), os.path.join("processed", image_paths[i]))

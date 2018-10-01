@@ -22,6 +22,8 @@ if __name__ == "__main__":
 		if img is not None:
 			padded_segments.append(img)
 			segment_val.append(i)
+		print(f"Padding images [{int((i / len(segments)) * 100)}%]\r", end="")
+
 	padded_segments = np.array(padded_segments)
 
 	model = load_model(os.path.join("models", f"model_{args.model}"))
@@ -34,4 +36,4 @@ if __name__ == "__main__":
 			count += 1
 
 	print(f"Found {count} cars")
-	io.imsave("output.jpg", image)
+	io.imsave(os.path.join("outputs", f"cars_{os.path.basename(args.image_path)}"), image)

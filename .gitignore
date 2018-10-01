@@ -1,5 +1,6 @@
 **/inputs
+**/outputs
 **/processed
-**/data
+**/datasets
+**/__pycache__
 .ipynb_checkpoints
-__pycache__/**
