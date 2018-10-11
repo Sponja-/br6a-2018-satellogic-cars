@@ -14,6 +14,7 @@ from matplotlib import pyplot as plt
 from segmentation import img_width, img_height, img_depth
 import random
 import os
+from argparse import ArgumentParser
 
 input_shape = (img_width, img_height, img_depth)
 
@@ -63,9 +64,10 @@ model = keras.models.Sequential([
 
 
 parser = ArgumentParser()
-parser.add_argument("dataset_path" default=os.path.join("datasets", "1"))
+parser.add_argument("dataset_path", default=os.path.join("datasets", "1"))
 parser.add_argument("--epochs", type=int)
 args = parser.parse_args()
+dataset_path = args.dataset_path
 
 epochs = args.epochs
 learning_rate = 1e-3
