@@ -128,7 +128,7 @@ def train():
 		epochs=epochs, verbose=1)
 
 	model_index = len(os.listdir("models"))
-	model.save(f"new_model_{model_index}")
+	model.save(os.path.join("models", f"new_model_{model_index}"))
 
 if __name__ == "__main__":
 	train()

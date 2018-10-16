@@ -17,12 +17,13 @@ if __name__ == "__main__":
 
 	padded_segments = []
 	segment_val = []
-	for i in range(segments.max() + 1):
+	max_val = segments.max() + 1
+	for i in range(max_val):
 		img = padded_image(image, segments, i)
 		if img is not None:
 			padded_segments.append(img)
 			segment_val.append(i)
-		print(f"Padding images [{int((i / len(segments)) * 100)}%]\r", end="")
+		print(f"Padding images [{int((i / max_val) * 100)}%]\r", end="")
 
 	padded_segments = np.array(padded_segments)
 
@@ -31,9 +32,8 @@ if __name__ == "__main__":
 
 	count = 0
 	for i, pred in zip(segment_val, predictions):
-		if pred[0] > 0.1:
-			image[segments == i] = [255, 0, 0]
-			count += 1
+		image[segments == i] = [255 * pred[1], 255 * pred[0], 0]
+		count += pred[0] > 0.3
 
 	print(f"Found {count} cars")
 	io.imsave(os.path.join("outputs", f"cars_{os.path.basename(args.image_path)}"), image)
