@@ -112,15 +112,18 @@ def padded_image(image, segments, value):
 	# returns a 4-channel image with dimensions (image_utils.img_width x image_utils.img_height)
 	return result_image
 
-def images_from_selection(image, segments, selection):
-	result = []
-	for i, val in enumerate(selection):
-		train = padded_image(image, segments, val)
-		# padded_image returns None when it can't produce an image_utils.img_width x image_utils.img_height image
-		if train is not None:
-			result.append(train)
-		print(f"Padding images [{int((i / len(selection)) * 100)}%]\r", end="")
-	return result
+def padded_segments(image, segments, selection):
+	padded_segments = []
+	segment_val = []
+	max_val = segments.max() + 1
+	for i in selection:
+		img = padded_image(image, segments, i)
+		if img is not None:
+			padded_segments.append(img)
+			segment_val.append(i)
+		print(f"Padding images [{int((i / max_val) * 100)}%]\r", end="")
+
+	return (np.array(padded_segments), segment_val)
 
 if __name__ == "__main__":
 
@@ -149,7 +152,7 @@ if __name__ == "__main__":
 
 		selection = select(images[i], segments[i])
 
-		true_padded_images = images_from_selection(images[i], segments[i], selection)
+		true_padded_images, _ = padded_segments(images[i], segments[i], selection)
 		
 		print(f"Saving {len(true_padded_images)} car images")
 		for img in true_padded_images:
@@ -159,7 +162,7 @@ if __name__ == "__main__":
 			true_index += 1
 
 		not_selection = set(range(segments[i].max())) - selection
-		false_padded_images = images_from_selection(images[i], segments[i], not_selection)
+		false_padded_images, _ = padded_segments(images[i], segments[i], not_selection)
 
 		print(f"Saving {len(false_padded_images)} non-car images")
 		for img in false_padded_images:
