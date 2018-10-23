@@ -18,13 +18,13 @@ def confusion_matrix(image, model, **kwargs):
 	segments = segment(image)
 	
 	selection = select(image, segments)
-	ground_truth = [True if i in segments else False for i in range(segments.max() + 1)]
+	ground_truth = [True if i in selection else False for i in range(segments.max() + 1)]
 
 	padded, segment_val = padded_segments(image, segments, list(range(segments.max() + 1)))
-	partial_predictions = model.predict(padded) > threshold
+	predictions = model.predict(padded)
 	predictions = []
 
-	for i, pred in i, enumerate(predictions):
+	for i, pred in enumerate(predictions):
 		if i in segment_val:
 			predictions.append(pred)
 		else:

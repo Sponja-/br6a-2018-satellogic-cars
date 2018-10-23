@@ -86,11 +86,9 @@ def padded_image(image, segments, value):
 	global_height, global_width, _ = image.shape
 	left_padding_x, top_padding_y = (img_width - width) // 2, (img_height - height) // 2
 	right_padding_x, bottom_padding_y = left_padding_x, top_padding_y
-
-	if (img_width - width) % 2 == 1:
-		right_padding_x += 1
-	if (img_height - height) % 2 == 1:
-		bottom_padding_y += 1 
+	
+	right_padding_x += (img_width - width) % 2
+	bottom_padding_y += (img_height - height) % 2 
 
 	if top_padding_y > y:
 		return None
