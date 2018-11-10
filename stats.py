@@ -20,18 +20,27 @@ def confusion_matrix(image, model, **kwargs):
 	threshold = kwargs.get("threshold", default_threshold)
 
 	segments = segment(image)
+	segment_values = range(segments.max() + 1)
 
-	ground_truth = [True if i in selection else False for i in range(segments.max() + 1)]
+	selection = default_selection
 
-	padded, segment_val = padded_segments(image, segments, list(range(segments.max() + 1)))
+	ground_truth = [True if i in selection else False for i in segment_values]
+
+	padded, padded_segment_values = padded_segments(image, segments, segment_values)
 	partial_predictions = model.predict(padded)[:,0] > threshold
 	predictions = []
 
-	for i, pred in enumerate(partial_predictions):
-		if i in segment_val:
-			predictions.append(pred)
+	index = 0
+	for i in segment_values:
+		if i in padded_segment_values:
+			predictions.append(partial_predictions[index])
+			index += 1
 		else:
 			predictions.append(False)
 
 	return [[sum(array_and(ground_truth, predictions)), sum(array_and(ground_truth, array_not(predictions)))],
 			[sum(array_and(array_not(ground_truth), predictions)), sum(array_not(array_or(ground_truth, predictions)))]]
+
+if __name__ == '__main__':
+	from keras.models import load_model
+	print(confusion_matrix(io.imread("inputs\\52.jpg"), load_model("models\\model_1"), threshold=0.1))
