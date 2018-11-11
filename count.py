@@ -15,7 +15,7 @@ if __name__ == "__main__":
 	parser.add_argument("--threshold", type=float, default=default_threshold)
 	args = parser.parse_args()
 
-	model = load_model(os.path.join("models", f"model_{index}"))
+	model = load_model(os.path.join("models", f"model_{args.model}"))
 	image = io.imread(args.image_path)
 	segments = segment(image)
 	padded, segment_val = padded_segments(image, segments, list(range(segments.max() + 1)))

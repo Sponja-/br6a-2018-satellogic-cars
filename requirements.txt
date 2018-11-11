@@ -6,3 +6,5 @@ tensorflow
 keras
 scipy
 scikit-learn
+pyautogui
+pyperclip

@@ -40,7 +40,3 @@ def confusion_matrix(image, model, **kwargs):
 
 	return [[sum(array_and(ground_truth, predictions)), sum(array_and(ground_truth, array_not(predictions)))],
 			[sum(array_and(array_not(ground_truth), predictions)), sum(array_not(array_or(ground_truth, predictions)))]]
-
-if __name__ == '__main__':
-	from keras.models import load_model
-	print(confusion_matrix(io.imread("inputs\\52.jpg"), load_model("models\\model_1"), threshold=0.1))
