@@ -120,7 +120,7 @@ def padded_segments(image, segments, selection):
 			padded_segments.append(img)
 			segment_val.append(i)
 		print(f"Padding images [{int((i / max_val) * 100)}%]\r", end="")
-
+	print('\n')
 	return (np.array(padded_segments), segment_val)
 
 if __name__ == "__main__":
