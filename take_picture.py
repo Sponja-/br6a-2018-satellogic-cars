@@ -6,15 +6,18 @@ import os
 default_region = (374, 81, 512, 512) # el formato es (x, y, ancho, alto)
 coord_text_start = (720, 822) # depende de la resolucion, yo lo hice con 1600x900
 
+image_index = 0
+
 def take_screenshot(**kwargs):
+	global image_index
 	region = kwargs.get("region", default_region)
-	image_index = len(os.listdir("inputs")) + len(os.listdir("processed")) + 1 # capaz hay que cambiar esto, pero aca va el indice de la imagen
-	auto.screenshot(os.path.join("inputs", f"{image_index}.jpg"), region=region)
+	auto.screenshot(os.path.join("inputs", f"image-{image_index}.jpg"), region=region)
 	with open("georeferences.csv", 'a') as coord_file:
 		coord_file.write(', '.join([str(image_index),
 									read_coords((region[0], region[1])),
 									read_coords((region[0] + region[2], region[1] + region[3]))]
 									) + '\n')
+	image_index += 1
 
 def read_coords(point):
 	auto.moveTo(*point)
@@ -63,4 +66,4 @@ def take_area_screenshot(width, height, **kwargs):
 
 
 if __name__ == '__main__':
-	take_area_screenshot(2, 2)
+	take_area_screenshot(3, 3)

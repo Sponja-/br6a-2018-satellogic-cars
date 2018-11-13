@@ -110,11 +110,15 @@ def padded_image(image, segments, value):
 	# returns a 4-channel image with dimensions (image_utils.img_width x image_utils.img_height)
 	return result_image
 
-def padded_segments(image, segments, selection):
+def padded_segments(image, segments, selection, mask=None):
 	padded_segments = []
 	segment_val = []
 	max_val = segments.max() + 1
 	for i in selection:
+		if mask is not None:
+			and_mask = np.logical_and(mask_from_segments(segments, i), mask)
+			if np.sum(and_mask) == 0:
+				continue
 		img = padded_image(image, segments, i)
 		if img is not None:
 			padded_segments.append(img)
