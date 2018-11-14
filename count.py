@@ -5,26 +5,35 @@ from keras.models import load_model
 from argparse import ArgumentParser
 import os
 
-default_threshold = 0.3
+threshold = 0.2
+
+model = load_model(os.path.join("models", "model_1"))
+
+def count_cars(image, **kwargs):
+	segments = segment(image)
+	padded, segment_val = padded_segments(image, segments, list(range(segments.max() + 1)), mask=kwargs.get("mask", None))
+	predictions = model.predict(padded)
+
+	count = 0
+	result = image.copy()
+	for val, pred in zip(segment_val, predictions):
+		result[segments == val] = [255 * pred[1], 255 * pred[0], 0]
+		count += pred[0] > threshold
+
+	return (count, result)
 
 if __name__ == "__main__":
+	image_paths = list(filter(lambda s: s.endswith(".jpg"), os.listdir("images")))
+	mask_paths = list(filter(lambda s: s.endswith(".bmp"), os.listdir("tiles")))
 
-	parser = ArgumentParser()
-	parser.add_argument("image_path", default="input.jpg")
-	parser.add_argument("--model", type=int, default=0)
-	parser.add_argument("--threshold", type=float, default=default_threshold)
-	args = parser.parse_args()
+	get_number = lambda elem: int(elem[elem.index('-') + 1:elem.index('.')])
+	image_paths.sort(key=get_number)
+	mask_paths.sort(key=get_number)
 
-	model = load_model(os.path.join("models", f"model_{args.model}"))
-	image = io.imread(args.image_path)
-	segments = segment(image)
-	padded, segment_val = padded_segments(image, segments, list(range(segments.max() + 1)))
-	predictions = model.predict(padded)
-	
-	count = 0
-	for val, pred in zip(segment_val, predictions):
-		image[segments == val] = [255 * pred[1], 255 * pred[0], 0]
-		count += pred[0] > args.threshold
-
-	print(f"Found {count} cars")
-	io.imsave(os.path.join("outputs", f"cars_{os.path.basename(args.image_path)}"), image)
+	for image_path, mask_path in zip(image_paths, mask_paths):
+		image, mask = io.imread(os.path.join("images", image_path)), io.imread(os.path.join("tiles", mask_path))
+		car_count, car_image = count_cars(image, mask=mask)
+		print(car_count, car_image)
+		with open("car_count.csv", 'a') as file:
+			file.write(', '.join([image_path, str(car_count)]) + '\n')
+		io.imsave(os.path.join("car_predictions", "cars_" + image_path), car_image)

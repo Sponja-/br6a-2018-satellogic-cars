@@ -117,7 +117,7 @@ def padded_segments(image, segments, selection, mask=None):
 	for i in selection:
 		if mask is not None:
 			and_mask = np.logical_and(mask_from_segments(segments, i), mask)
-			if np.sum(and_mask) == 0:
+			if not and_mask.any():
 				continue
 		img = padded_image(image, segments, i)
 		if img is not None:
