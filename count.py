@@ -22,6 +22,14 @@ def count_cars(image, **kwargs):
 
 	return (count, result)
 
+def count_from_path(image_path, **kwargs):
+	image = io.imread(image_path)
+	car_count, car_image = count_cars(image)
+	print(f"Found {car_count} cars")
+	io.imshow(car_image)
+	if kwargs.get("save", False):
+		io.imsave("cars" + image_path, car_image)
+
 if __name__ == "__main__":
 	image_paths = list(filter(lambda s: s.endswith(".jpg"), os.listdir("images")))
 	mask_paths = list(filter(lambda s: s.endswith(".bmp"), os.listdir("tiles")))
